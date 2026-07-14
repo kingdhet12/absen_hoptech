@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistem Absensi Karyawan PT Hoptech Indonesia berbasis HTML, CSS, JavaScript, dan Supabase.">
+  <title>Sistem Absensi Karyawan PT Hoptech Indonesia</title>
+
+  <!-- Google Font, Font Awesome, Supabase SDK, dan Chart.js -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- File CSS utama -->
+  <link rel="icon" href="assets/logo/hoptech-logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <p>Memuat data...</p>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- Halaman Login Admin -->
+  <section class="login-screen" id="loginScreen">
+    <div class="login-card fade-in">
+      <div class="login-card__brand">
+        <img src="assets/logo/hoptech-logo.svg" alt="Logo PT Hoptech Indonesia">
+        <div>
+          <span>PT Hoptech Indonesia</span>
+          <h1>Sistem Absensi Karyawan</h1>
+        </div>
+      </div>
+      <p class="login-card__text">
+        Masuk menggunakan akun admin Supabase Authentication untuk mengelola data karyawan dan absensi.
+      </p>
+
+      <div class="config-warning" id="configWarning">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        Isi `SUPABASE_URL` dan `SUPABASE_ANON_KEY` pada file `config.js` terlebih dahulu.
+      </div>
+
+      <form class="login-form" id="loginForm">
+        <label for="loginEmail">Email</label>
+        <div class="input-icon">
+          <i class="fa-solid fa-envelope"></i>
+          <input type="email" id="loginEmail" placeholder="admin@hoptech.co.id" required>
+        </div>
+
+        <label for="loginPassword">Password</label>
+        <div class="input-icon">
+          <i class="fa-solid fa-lock"></i>
+          <input type="password" id="loginPassword" placeholder="Masukkan password" required>
+        </div>
+
+        <button type="submit" class="button button--primary ripple-button">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          Login Admin
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Aplikasi Utama -->
+  <div class="app-shell hidden" id="appShell">
+    <!-- Sidebar Menu -->
+    <aside class="sidebar" id="sidebar">
+      <a href="#" class="sidebar__brand">
+        <img src="assets/logo/hoptech-logo.svg" alt="Logo PT Hoptech Indonesia">
+        <div>
+          <strong>Hoptech</strong>
+          <span>Attendance System</span>
+        </div>
+      </a>
+
+      <nav class="sidebar__nav" aria-label="Menu aplikasi">
+        <button class="sidebar__link active" data-view="dashboardView" type="button">
+          <i class="fa-solid fa-chart-line"></i>
+          Dashboard
+        </button>
+        <button class="sidebar__link" data-view="employeesView" type="button">
+          <i class="fa-solid fa-users"></i>
+          Data Karyawan
+        </button>
+        <button class="sidebar__link" data-view="attendanceView" type="button">
+          <i class="fa-solid fa-calendar-check"></i>
+          Absensi
+        </button>
+        <button class="sidebar__link" data-view="reportsView" type="button">
+          <i class="fa-solid fa-file-lines"></i>
+          Laporan
+        </button>
+        <button class="sidebar__link" data-view="chartsView" type="button">
+          <i class="fa-solid fa-chart-pie"></i>
+          Grafik
+        </button>
+        <button class="sidebar__link" data-view="settingsView" type="button">
+          <i class="fa-solid fa-gear"></i>
+          Pengaturan
+        </button>
+        <button class="sidebar__link sidebar__link--danger" id="logoutButton" type="button">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          Logout
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Topbar -->
+      <header class="topbar">
+        <button class="icon-button" id="sidebarToggle" type="button" aria-label="Buka menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div>
+          <h2 id="pageTitle">Dashboard</h2>
+          <p id="todayText">Memuat tanggal...</p>
+        </div>
+        <div class="topbar__actions">
+          <div class="clock-card">
+            <i class="fa-regular fa-clock"></i>
+            <span id="realtimeClock">00:00:00</span>
+          </div>
+          <button class="icon-button" id="darkModeToggle" type="button" aria-label="Toggle dark mode">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Dashboard -->
+      <section class="view-section active" id="dashboardView">
+        <div class="stats-grid">
+          <article class="stat-card slide-up">
+            <span>Total Karyawan</span>
+            <strong id="statTotalEmployees">0</strong>
+            <i class="fa-solid fa-users"></i>
+          </article>
+          <article class="stat-card stat-card--success slide-up">
+            <span>Hadir Hari Ini</span>
+            <strong id="statPresentToday">0</strong>
+            <i class="fa-solid fa-user-check"></i>
+          </article>
+          <article class="stat-card stat-card--muted slide-up">
+            <span>Tidak Hadir</span>
+            <strong id="statAbsentToday">0</strong>
+            <i class="fa-solid fa-user-xmark"></i>
+          </article>
+          <article class="stat-card stat-card--warning slide-up">
+            <span>Terlambat</span>
+            <strong id="statLateToday">0</strong>
+            <i class="fa-solid fa-clock-rotate-left"></i>
+          </article>
+          <article class="stat-card stat-card--wide slide-up">
+            <span>Persentase Kehadiran Bulan Ini</span>
+            <strong id="statMonthlyAttendance">0%</strong>
+            <div class="progress-line"><span id="monthlyAttendanceBar"></span></div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Data Karyawan -->
+      <section class="view-section" id="employeesView">
+        <div class="section-card">
+          <div class="section-card__header">
+            <div>
+              <h3>Data Karyawan</h3>
+              <p>Kelola data karyawan PT Hoptech Indonesia.</p>
+            </div>
+            <button class="button button--primary ripple-button" id="addEmployeeButton" type="button">
+              <i class="fa-solid fa-plus"></i>
+              Tambah Karyawan
+            </button>
+          </div>
+
+          <div class="table-toolbar">
+            <div class="input-icon">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="search" id="employeeSearch" placeholder="Cari nama, ID, atau divisi...">
+            </div>
+          </div>
+
+          <div class="responsive-table">
+            <table>
+              <thead>
+                <tr>
+                  <th data-employee-sort="employee_id">ID Karyawan</th>
+                  <th data-employee-sort="name">Nama</th>
+                  <th data-employee-sort="division">Divisi</th>
+                  <th data-employee-sort="position">Jabatan</th>
+                  <th data-employee-sort="join_date">Tanggal Masuk</th>
+                  <th data-employee-sort="status">Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="employeeTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination" id="employeePagination"></div>
+        </div>
+      </section>
+
+      <!-- Absensi -->
+      <section class="view-section" id="attendanceView">
+        <div class="attendance-grid">
+          <div class="section-card">
+            <div class="section-card__header">
+              <div>
+                <h3>Input Absensi</h3>
+                <p>Tanggal dan jam akan terisi otomatis.</p>
+              </div>
+            </div>
+            <form class="attendance-form" id="attendanceForm">
+              <label for="attendanceEmployeeId">ID Karyawan</label>
+              <div class="input-icon">
+                <i class="fa-solid fa-id-card"></i>
+                <input type="text" id="attendanceEmployeeId" placeholder="Contoh: HOP001" required>
+              </div>
+
+              <label for="attendanceStatus">Status</label>
+              <select id="attendanceStatus" required>
+                <option value="Hadir">Hadir</option>
+                <option value="Izin">Izin</option>
+                <option value="Sakit">Sakit</option>
+                <option value="Alpha">Alpha</option>
+                <option value="Terlambat">Terlambat</option>
+              </select>
+
+              <div class="auto-time-grid">
+                <div>
+                  <span>Tanggal</span>
+                  <strong id="attendanceDateText">-</strong>
+                </div>
+                <div>
+                  <span>Jam Otomatis</span>
+                  <strong id="attendanceTimeText">-</strong>
+                </div>
+              </div>
+
+              <button class="button button--primary ripple-button" id="saveAttendanceButton" type="submit">
+                <i class="fa-solid fa-floppy-disk"></i>
+                Simpan Absensi
+              </button>
+              <button class="button button--secondary ripple-button" id="checkoutButton" type="button" disabled>
+                <i class="fa-solid fa-door-open"></i>
+                Set Jam Keluar
+              </button>
+            </form>
+          </div>
+
+          <aside class="employee-preview" id="attendancePreview">
+            <img src="assets/avatar/default-avatar.svg" alt="Foto karyawan" id="previewPhoto">
+            <h3 id="previewName">Masukkan ID Karyawan</h3>
+            <p id="previewMeta">Nama, divisi, dan jabatan akan tampil otomatis.</p>
+            <div class="preview-list">
+              <span>Jam Masuk <strong id="previewCheckIn">-</strong></span>
+              <span>Jam Keluar <strong id="previewCheckOut">-</strong></span>
+              <span>Status <strong id="previewStatus">-</strong></span>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- Laporan -->
+      <section class="view-section" id="reportsView">
+        <div class="section-card">
+          <div class="section-card__header">
+            <div>
+              <h3>Laporan Absensi</h3>
+              <p>Filter, export, dan print data absensi.</p>
+            </div>
+            <div class="export-actions">
+              <button class="button button--secondary ripple-button" id="exportCsvButton" type="button">CSV</button>
+              <button class="button button--secondary ripple-button" id="exportExcelButton" type="button">Excel</button>
+              <button class="button button--secondary ripple-button" id="printReportButton" type="button">Print</button>
+            </div>
+          </div>
+
+          <div class="report-filters">
+            <input type="date" id="reportDateFilter">
+            <select id="reportMonthFilter"></select>
+            <select id="reportYearFilter"></select>
+            <input type="search" id="reportNameFilter" placeholder="Nama atau ID">
+            <input type="search" id="reportDivisionFilter" placeholder="Divisi">
+            <select id="reportStatusFilter">
+              <option value="">Semua Status</option>
+              <option value="Hadir">Hadir</option>
+              <option value="Izin">Izin</option>
+              <option value="Sakit">Sakit</option>
+              <option value="Alpha">Alpha</option>
+              <option value="Terlambat">Terlambat</option>
+            </select>
+            <button class="button button--primary ripple-button" id="applyReportFilterButton" type="button">Filter</button>
+          </div>
+
+          <div class="responsive-table" id="reportPrintArea">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>ID</th>
+                  <th>Nama</th>
+                  <th>Divisi</th>
+                  <th>Jabatan</th>
+                  <th>Jam Masuk</th>
+                  <th>Jam Keluar</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="reportTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Grafik -->
+      <section class="view-section" id="chartsView">
+        <div class="chart-grid">
+          <article class="section-card chart-card">
+            <h3>Grafik Kehadiran Bulanan</h3>
+            <canvas id="monthlyChart"></canvas>
+          </article>
+          <article class="section-card chart-card">
+            <h3>Grafik Kehadiran Mingguan</h3>
+            <canvas id="weeklyChart"></canvas>
+          </article>
+          <article class="section-card chart-card">
+            <h3>Pie Chart Status Kehadiran</h3>
+            <canvas id="statusPieChart"></canvas>
+          </article>
+          <article class="section-card chart-card">
+            <h3>Top 10 Karyawan Terajin Bulan Kemarin</h3>
+            <canvas id="topEmployeeChart"></canvas>
+          </article>
+        </div>
+      </section>
+
+      <!-- Pengaturan -->
+      <section class="view-section" id="settingsView">
+        <div class="section-card">
+          <h3>Pengaturan</h3>
+          <p class="settings-text">
+            Konfigurasi Supabase dibaca dari file <strong>config.js</strong>. Jangan simpan service role key di frontend.
+          </p>
+          <div class="settings-grid">
+            <div><span>Status Supabase</span><strong id="supabaseStatusText">-</strong></div>
+            <div><span>Mode Tampilan</span><strong id="themeStatusText">-</strong></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal Tambah/Edit Karyawan -->
+  <div class="modal" id="employeeModal" aria-hidden="true">
+    <div class="modal__overlay" data-close-modal></div>
+    <div class="modal__content">
+      <button class="modal__close" type="button" data-close-modal aria-label="Tutup modal">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+      <h3 id="employeeModalTitle">Tambah Karyawan</h3>
+      <form class="employee-form" id="employeeForm">
+        <input type="hidden" id="employeeRecordId">
+        <label for="employeeIdInput">ID Karyawan</label>
+        <input type="text" id="employeeIdInput" placeholder="HOP001" required>
+
+        <label for="employeeNameInput">Nama</label>
+        <input type="text" id="employeeNameInput" placeholder="Nama lengkap" required>
+
+        <label for="employeeDivisionInput">Divisi</label>
+        <input type="text" id="employeeDivisionInput" placeholder="IT, Finance, HRD..." required>
+
+        <label for="employeePositionInput">Jabatan</label>
+        <input type="text" id="employeePositionInput" placeholder="Staff, Supervisor..." required>
+
+        <label for="employeePhotoInput">URL Foto</label>
+        <input type="url" id="employeePhotoInput" placeholder="https://...">
+
+        <label for="employeeJoinDateInput">Tanggal Masuk</label>
+        <input type="date" id="employeeJoinDateInput" required>
+
+        <label for="employeeStatusInput">Status</label>
+        <select id="employeeStatusInput" required>
+          <option value="Aktif">Aktif</option>
+          <option value="Nonaktif">Nonaktif</option>
+        </select>
+
+        <button class="button button--primary ripple-button" type="submit">
+          <i class="fa-solid fa-save"></i>
+          Simpan
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Konfirmasi Delete -->
+  <div class="modal" id="confirmModal" aria-hidden="true">
+    <div class="modal__overlay" data-close-confirm></div>
+    <div class="modal__content modal__content--small">
+      <h3>Hapus Data?</h3>
+      <p id="confirmMessage">Data yang dihapus tidak dapat dikembalikan.</p>
+      <div class="confirm-actions">
+        <button class="button button--secondary" data-close-confirm type="button">Batal</button>
+        <button class="button button--danger" id="confirmDeleteButton" type="button">Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Back To Top -->
+  <button class="back-to-top" id="backToTop" type="button" aria-label="Kembali ke atas">
+    <i class="fa-solid fa-arrow-up"></i>
+  </button>
+
+  <!-- File JavaScript -->
+  <script src="config.js"></script>
+  <script src="supabase.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

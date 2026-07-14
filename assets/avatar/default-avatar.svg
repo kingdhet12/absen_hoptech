@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-labelledby="title desc">
+  <title id="title">Default Avatar</title>
+  <desc id="desc">Avatar default karyawan.</desc>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#22C55E"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="240" rx="120" fill="#EAF2FF"/>
+  <circle cx="120" cy="88" r="46" fill="url(#g)"/>
+  <path d="M48 212c12-56 42-84 72-84s60 28 72 84H48Z" fill="#1D4ED8"/>
+  <circle cx="93" cy="88" r="7" fill="#ffffff"/>
+  <circle cx="147" cy="88" r="7" fill="#ffffff"/>
+  <path d="M103 112c11 8 23 8 34 0" fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>
+</svg>
