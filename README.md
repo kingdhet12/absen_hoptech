@@ -2,6 +2,23 @@
 
 Web app absensi karyawan berbasis **HTML5, CSS3, Vanilla JavaScript ES6, Supabase, dan Chart.js**. Tidak menggunakan React, Vue, Angular, Bootstrap, Tailwind, atau Node.js.
 
+---
+
+Support Admin 💵 💰
+https://saweria.co/resae
+
+---
+
+## 🌐 Live Demo
+
+> GitHub Pages:
+> https://github.com/kingdhet12
+
+> Link Demo:
+> https://absen-hoptech.vercel.app/
+
+---
+
 ## Fitur
 
 - Login admin dengan Supabase Authentication.
@@ -121,3 +138,21 @@ Catatan: karena `config.js` berada di frontend, hanya gunakan `anon public key`.
 - `supabase.js`: inisialisasi Supabase client.
 - `script.js`: semua logic aplikasi.
 - `supabase-schema.sql`: tabel, RLS policy, constraint, dan dummy data.
+
+# 👨‍💻 Author
+
+**Resa Erlangga**
+
+📧 Email  
+resaerlangga@gmail.com
+
+💼 LinkedIn  
+www.linkedin.com/in/resa-erlangga-42018b179
+
+🐙 GitHub  
+https://github.com/kingdhet12
+
+🌐 Portfolio  
+https://kingdhet12.github.io/
+
+---
