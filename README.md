@@ -18,6 +18,9 @@ https://saweria.co/resae
 > https://absen-hoptech.vercel.app/
 
 ---
+<img width="1440" height="765" alt="image" src="https://github.com/user-attachments/assets/49eee77c-7210-45bb-96d6-40ac72dc15b9" />
+<img width="1423" height="752" alt="image" src="https://github.com/user-attachments/assets/f10f132b-5461-4f90-bcc7-fdaa4ef22f69" />
+<img width="1437" height="755" alt="image" src="https://github.com/user-attachments/assets/591e22f5-5a93-44c3-9b8f-d47a97658e2b" />
 
 ## Fitur
 
